@@ -1,1 +1,1 @@
-rootProject.name = "loadtest"
+rootProject.name = "loadtest-concurrency"
