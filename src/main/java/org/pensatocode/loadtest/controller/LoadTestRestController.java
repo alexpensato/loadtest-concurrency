@@ -33,10 +33,10 @@ public class LoadTestRestController {
         return loadTestService.resetTestData(500000, 200000);
     }
 
-    @GetMapping("/start/{strategyName}/{experimentName}")
-    public String loadTest(@PathVariable("strategyName") String strategyName,
+    @GetMapping("/start/{strategyKey}/{experimentName}")
+    public String loadTest(@PathVariable("strategyKey") String strategyKey,
                            @PathVariable("experimentName") String experimentName) {
-        Strategy strategy = strategyService.update(strategyName);
+        Strategy strategy = strategyService.retrieveByKey(strategyKey);
         EventHandler eventHandler = strategyService.createEventHandlerByStrategy(strategy);
         return loadTestService.startLoadTest(strategy, eventHandler, experimentName);
     }

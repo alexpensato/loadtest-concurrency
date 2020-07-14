@@ -17,8 +17,6 @@ public class StrategyService {
     private final ForkJoinEventHandler forkJoinEventHandler;
     private final DedicatedClockEventHandler dedicatedClockEventHandler;
 
-    private Strategy currentStrategy = Strategy.BASIC;
-
     public StrategyService(@Autowired BasicEventHandler basicEventHandler,
                            @Autowired ForkJoinEventHandler forkJoinEventHandler,
                            @Autowired DedicatedClockEventHandler dedicatedClockEventHandler) {
@@ -27,17 +25,12 @@ public class StrategyService {
         this.dedicatedClockEventHandler = dedicatedClockEventHandler;
     }
 
-    public Strategy getCurrent() {
-        return currentStrategy;
-    }
-
-    public Strategy update(String value) {
-        Strategy result = Strategy.find(value);
+    public Strategy retrieveByKey(String key) {
+        Strategy result = Strategy.find(key);
         if (result == null) {
             throw new IllegalArgumentException("Strategy not found!");
         }
-        this.currentStrategy = result;
-        return this.currentStrategy;
+        return result;
     }
 
     public AbstractEventHandler createEventHandlerByStrategy(Strategy strategy) {
