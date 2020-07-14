@@ -10,6 +10,8 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.Optional;
+
 @RestController
 @RequestMapping("/loadtest")
 public class LoadTestRestController {
@@ -17,28 +19,51 @@ public class LoadTestRestController {
     private final StrategyService strategyService;
     private final LoadTestService loadTestService;
 
+    private static final int PRODUCTS_OFFSET =
+            Optional.ofNullable(System.getProperty("pensatocode.loadtest.offset.product"))
+                    .map(Integer::parseInt)
+                    .orElse(500000); // half-million
+
+    private static final int EVENTS_OFFSET =
+            Optional.ofNullable(System.getProperty("pensatocode.loadtest.offset.event"))
+                    .map(Integer::parseInt)
+                    .orElse(200000); // two hundred thousand
+
+
     public LoadTestRestController(@Autowired StrategyService strategyService,
                                   @Autowired LoadTestService loadTestService) {
         this.strategyService = strategyService;
         this.loadTestService = loadTestService;
     }
 
+    /**
+     * Endpoint to generate necessary amount of data to initiate load test
+     */
     @GetMapping("/data/generate")
     public String generate() {
-        return loadTestService.generateTestData();
+        return loadTestService.generateTestData(PRODUCTS_OFFSET, EVENTS_OFFSET);
     }
 
+    /**
+     * Endpoint to reset test data to its initial condition
+     */
     @GetMapping("/data/reset")
     public String reset() {
-        return loadTestService.resetTestData(500000, 200000);
+        return loadTestService.resetTestData(PRODUCTS_OFFSET, EVENTS_OFFSET);
     }
 
+    /**
+     * Endpoint that perform a few tasks and will be used by external load testing tool
+     *
+     * @param strategyKey key for strategy to be used
+     * @param experimentName experiment name to identify load test
+     */
     @GetMapping("/start/{strategyKey}/{experimentName}")
-    public String loadTest(@PathVariable("strategyKey") String strategyKey,
+    public String singleEvent(@PathVariable("strategyKey") String strategyKey,
                            @PathVariable("experimentName") String experimentName) {
         Strategy strategy = strategyService.retrieveByKey(strategyKey);
         EventHandler eventHandler = strategyService.createEventHandlerByStrategy(strategy);
-        return loadTestService.startLoadTest(strategy, eventHandler, experimentName);
+        return loadTestService.startEvent(strategy, eventHandler, experimentName);
     }
 
 }

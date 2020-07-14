@@ -27,8 +27,8 @@ public class LoadTestService {
         this.productRepository = productRepository;
     }
 
-    public String generateTestData() {
-        // TODO: generate
+    public String generateTestData(Integer productOffset, Integer eventConfigOffset) {
+        // TODO: generate minimum to achieve both offsets
         return "Method not implemented";
     }
 
@@ -52,7 +52,7 @@ public class LoadTestService {
         return sb.toString();
     }
 
-    public String startLoadTest(Strategy strategy, EventHandler eventHandler, String experimentName) {
+    public String startEvent(Strategy strategy, EventHandler eventHandler, String experimentName) {
         EventConfig eventConfig = EventConfigUtil.createRandomEventConfig(experimentName, strategy.getKey());
         long startTime = System.nanoTime();
         Short executedEvents = eventHandler.processEvents(eventConfig);
