@@ -1,6 +1,5 @@
 package org.pensatocode.loadtest.service;
 
-import lombok.extern.slf4j.Slf4j;
 import org.pensatocode.loadtest.handler.AbstractEventHandler;
 import org.pensatocode.loadtest.handler.impl.BasicEventHandler;
 import org.pensatocode.loadtest.handler.impl.DedicatedClockEventHandler;
@@ -10,17 +9,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.MissingResourceException;
-import java.util.SplittableRandom;
 
 @Service
-@Slf4j
 public class StrategyService {
 
     private final BasicEventHandler basicEventHandler;
     private final ForkJoinEventHandler forkJoinEventHandler;
     private final DedicatedClockEventHandler dedicatedClockEventHandler;
-
-    private final SplittableRandom splittableRandom = new SplittableRandom();
 
     private Strategy currentStrategy = Strategy.BASIC;
 
@@ -38,15 +33,15 @@ public class StrategyService {
 
     public Strategy update(String value) {
         Strategy result = Strategy.find(value);
-        if (result != null) {
-            this.currentStrategy = result;
+        if (result == null) {
+            throw new IllegalArgumentException("Strategy not found!");
         }
-        log.debug(String.format("Changing strategies: %s is %s", value, result));
+        this.currentStrategy = result;
         return this.currentStrategy;
     }
 
-    public AbstractEventHandler createEventHandlerByCurrentStrategy() {
-        switch(currentStrategy) {
+    public AbstractEventHandler createEventHandlerByStrategy(Strategy strategy) {
+        switch(strategy) {
             case BASIC:
                 return basicEventHandler;
             case FORK_JOIN:
