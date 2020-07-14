@@ -10,6 +10,7 @@ import org.pensatocode.loadtest.repository.ProductRepository;
 import org.pensatocode.loadtest.util.EventConfigUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
 import java.util.List;
@@ -32,13 +33,15 @@ public class LoadTestService {
         return "Method not implemented";
     }
 
+    @Transactional
     public String resetTestData(Integer productOffset, Integer eventConfigOffset) {
+        log.info(String.format("Product offset = %d, Event offset = %d", productOffset, eventConfigOffset));
         StringBuilder sb = new StringBuilder();
         List<Product> products = productRepository.findByOffset(productOffset);
         if (products == null || products.isEmpty()) {
             sb.append("Product table is below offset");
         } else {
-            Integer productCount = productRepository.deleteGreaterThan(products.get(0).getId());
+            Integer productCount = productRepository.deleteProducts(products.get(0).getId());
             sb.append("Deleted products = ").append(productCount);
         }
         sb.append(", ");
@@ -46,13 +49,13 @@ public class LoadTestService {
         if (events == null || events.isEmpty()) {
             sb.append("EventConfig table is below offset");
         } else {
-            Integer eventCount = eventConfigRepository.deleteGreaterThan(events.get(0).getId());
+            Integer eventCount = eventConfigRepository.deleteEventConfigs(events.get(0).getId());
             sb.append("Deleted events = ").append(eventCount);
         }
         return sb.toString();
     }
 
-    public String startEvent(Strategy strategy, EventHandler eventHandler, String experimentName) {
+    public String executeSingleStep(Strategy strategy, EventHandler eventHandler, String experimentName) {
         EventConfig eventConfig = EventConfigUtil.createRandomEventConfig(experimentName, strategy.getKey());
         long startTime = System.nanoTime();
         Short executedEvents = eventHandler.processEvents(eventConfig);
