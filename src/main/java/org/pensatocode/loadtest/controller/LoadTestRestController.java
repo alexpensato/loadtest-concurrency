@@ -10,7 +10,12 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.Optional;
+import java.util.Properties;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 @RestController
 @RequestMapping("/loadtest")
@@ -19,21 +24,20 @@ public class LoadTestRestController {
     private final StrategyService strategyService;
     private final LoadTestService loadTestService;
 
-    private static final int PRODUCTS_OFFSET =
-            Optional.ofNullable(System.getProperty("pensatocode.loadtest.offset.product"))
-                    .map(Integer::parseInt)
-                    .orElse(500000); // half-million
-
-    private static final int EVENTS_OFFSET =
-            Optional.ofNullable(System.getProperty("pensatocode.loadtest.offset.event"))
-                    .map(Integer::parseInt)
-                    .orElse(200000); // two hundred thousand
-
+    private final int PRODUCTS_OFFSET;
+    private final int EVENTS_OFFSET;
 
     public LoadTestRestController(@Autowired StrategyService strategyService,
                                   @Autowired LoadTestService loadTestService) {
         this.strategyService = strategyService;
         this.loadTestService = loadTestService;
+        Properties properties = loadApplicationProperties();
+        PRODUCTS_OFFSET = Optional.ofNullable(properties.getProperty("pensatocode.loadtest.offset.product"))
+                        .map(Integer::parseInt)
+                        .orElse(500000); // half-million items
+        EVENTS_OFFSET = Optional.ofNullable(properties.getProperty("pensatocode.loadtest.offset.event"))
+                        .map(Integer::parseInt)
+                        .orElse(200000); // two hundred thousand events
     }
 
     /**
@@ -58,12 +62,24 @@ public class LoadTestRestController {
      * @param strategyKey key for strategy to be used
      * @param experimentName experiment name to identify load test
      */
-    @GetMapping("/start/{strategyKey}/{experimentName}")
+    @GetMapping("/run/{strategyKey}/{experimentName}")
     public String singleEvent(@PathVariable("strategyKey") String strategyKey,
                            @PathVariable("experimentName") String experimentName) {
         Strategy strategy = strategyService.retrieveByKey(strategyKey);
         EventHandler eventHandler = strategyService.createEventHandlerByStrategy(strategy);
-        return loadTestService.startEvent(strategy, eventHandler, experimentName);
+        return loadTestService.executeSingleStep(strategy, eventHandler, experimentName);
     }
 
+    private Properties loadApplicationProperties() {
+        Properties properties = new Properties();
+        try {
+            InputStream inputStream = getClass().getClassLoader().getResourceAsStream("application.properties");
+            if (inputStream != null) {
+                properties.load(inputStream);
+            }
+        } catch (IOException e) {
+            Logger.getLogger(getClass().getName()).log(Level.SEVERE, e.getMessage(), e);
+        }
+        return properties;
+    }
 }
