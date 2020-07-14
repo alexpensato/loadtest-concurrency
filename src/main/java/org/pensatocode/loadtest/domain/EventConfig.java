@@ -12,9 +12,8 @@ import javax.persistence.*;
 @AllArgsConstructor
 public class EventConfig {
     @Id
-    @SequenceGenerator(name = "eventConfigSequence", sequenceName = "event_config_id_seq", initialValue = 60)
+    @SequenceGenerator(name = "eventConfigSequence", sequenceName = "event_config_id_seq", allocationSize = 1)
     @GeneratedValue(generator = "eventConfigSequence")
-
     Long id;
     String strategy;
     String experimentName;
