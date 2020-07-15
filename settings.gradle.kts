@@ -1,1 +1,1 @@
-rootProject.name = "loadtest-concurrency"
+rootProject.name = "loadtest-concurrency-jpa"
